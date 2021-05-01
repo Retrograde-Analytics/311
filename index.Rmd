@@ -1,0 +1,239 @@
+---
+title: "PHL 311 Calls by Zipcode (2015-2019)"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(dplyr)
+library(ggplot2)
+library(readxl)
+library(plotly)
+library(rjson)
+```
+
+```{r}
+df2019 <- as.data.frame(read_xlsx("311_PHL.xlsx", sheet = "2019"))
+
+df2018 <- as.data.frame(read_xlsx("311_PHL.xlsx", sheet = "2018"))
+
+df2017 <- as.data.frame(read_xlsx("311_PHL.xlsx", sheet = "2017"))
+
+df2016 <- as.data.frame(read_xlsx("311_PHL.xlsx", sheet = "2016"))
+
+df2015 <- as.data.frame(read_xlsx("311_PHL.xlsx", sheet = "2015"))
+
+
+
+
+
+df <- bind_rows(df2019, df2018, df2017, df2016, df2015)
+
+
+
+
+
+
+zip <- c(19116, 19154, 19115, 19114, 19136, 19152, 19111, 19135,
+         19149, 19137, 19124, 19120, 19126, 19138, 19150, 19134,
+         19140, 19141, 19144, 19119, 19118, 19128, 19127, 19129,
+         19131, 19123, 19133, 19125, 19122, 19121, 19131, 19151,
+         19139, 19104, 19130, 19123, 19106, 19107, 19102, 19103,
+         19104, 19151, 19143, 19146, 19147, 19148, 19145, 19132,
+         19142, 19153, 19112, 19109, 19123)
+
+df311 = filter(df, zipcode %in% zip)
+
+
+
+
+
+service_list <- distinct(df311, service_name)
+
+
+
+df311_bins <- df311 %>%
+  mutate(service_name = replace(service_name, service_name == "Illegal Dumping", "Sanitation"),
+         service_name = replace(service_name, service_name == "Rubbish/Recyclable Material Collection", "Sanitation"),
+         service_name = replace(service_name, service_name == "Infestation Residential", "Sanitation"),
+         service_name = replace(service_name, service_name == "Dead Animal in Street", "Sanitation"),
+         service_name = replace(service_name, service_name == "Building Construction", "Construction"),
+         service_name = replace(service_name, service_name == "Street Defect", "Streets"),
+         service_name = replace(service_name, service_name == "Vacant House or Commercial", "Safety"),
+         service_name = replace(service_name, service_name == "Right of Way Unit", "Streets"),
+         service_name = replace(service_name, service_name == "Vacant Lot Clean-Up", "Sanitation"),
+         service_name = replace(service_name, service_name == "Traffic (Other)", "Streets"),
+         service_name = replace(service_name, service_name == "Zoning Business", "Zoning"),
+         service_name = replace(service_name, service_name == "Dangerous Sidewalk", "Safety"),
+         service_name = replace(service_name, service_name == "Other (Streets)", "Streets"),
+         service_name = replace(service_name, service_name == "LI Escalation", "Zoning"),
+         service_name = replace(service_name, service_name == "Traffic Signal Emergency", "Streets"),
+         service_name = replace(service_name, service_name == "No Heat (Residential)", "Misc"),
+         service_name = replace(service_name, service_name == "Stop Sign Repair", "Streets"),
+         service_name = replace(service_name, service_name == "Graffiti Removal", "Safety"),
+         service_name = replace(service_name, service_name == "Maintenance Residential or Commercial", "Construction"),
+         service_name = replace(service_name, service_name == "Street Light Outage", "Streets"),
+         service_name = replace(service_name, service_name == "Boarding Room House", "Zoning"),
+         service_name = replace(service_name, service_name == "Abandoned Vehicle", "Streets"),
+         service_name = replace(service_name, service_name == "Building Dangerous", "Safety"),
+         service_name = replace(service_name, service_name == "Building Force", "Zoning"),
+         service_name = replace(service_name, service_name == "Zoning Residential", "Zoning"),
+         service_name = replace(service_name, service_name == "Fire Residential or Commercial", "Safety"),
+         service_name = replace(service_name, service_name == "Street Trees", "Streets"),
+         service_name = replace(service_name, service_name == "Inlet Cleaning", "Sanitation"),
+         service_name = replace(service_name, service_name == "Other Dangerous", "Safety"),
+         service_name = replace(service_name, service_name == "Smoke Detector", "Safety"),
+         service_name = replace(service_name, service_name == "Parks and Rec Safety and Maintenance", "Safety"),
+         service_name = replace(service_name, service_name == "KB Escalations", "Misc"),
+         service_name = replace(service_name, service_name == "Alley Light Outage", "Streets"),
+         service_name = replace(service_name, service_name == "Hydrant Request", "Streets"),
+         service_name = replace(service_name, service_name == "Complaint (Streets)", "Streets"),
+         service_name = replace(service_name, service_name == "Street Paving", "Streets"),
+         service_name = replace(service_name, service_name == "Line Striping", "Streets"),
+         service_name = replace(service_name, service_name == "License Residential", "Zoning"),
+         service_name = replace(service_name, service_name == "Abandoned Bike", "Streets"),
+         service_name = replace(service_name, service_name == "Shoveling", "Streets"),
+         service_name = replace(service_name, service_name == "Salting", "Streets"),
+         service_name = replace(service_name, service_name == "Tree Dangerous", "Safety"),
+         service_name = replace(service_name, service_name == "Police Complaint", "Misc"),
+         service_name = replace(service_name, service_name == "Complaints against Fire or EMS", "Misc"),
+         service_name = replace(service_name, service_name == "Service Day", "Misc"),
+         service_name = replace(service_name, service_name == "Daycare Residential or Commercial", "Misc"),
+         service_name = replace(service_name, service_name == "Manhole Cover", "Streets"),
+         service_name = replace(service_name, service_name == "Newsstand Outdoor Cafe", "Misc"),
+         service_name = replace(service_name, service_name == "Hydrant Knocked Down (No Water)", "Streets"),
+         service_name = replace(service_name, service_name == "Revenue Escalation", "Misc"),
+         service_name = replace(service_name, service_name == "Homeless Encampment", "Safety"),
+         service_name = replace(service_name, service_name == "Directory Assistance", "Misc"),
+         service_name = replace(service_name, service_name == "Miscellaneous", "Misc"),
+         service_name = replace(service_name, service_name == "Newsstand/Outdoor Cafe", "Misc"),
+         service_name = replace(service_name, service_name == "Construction Site Task Force", "Construction"),
+         service_name = replace(service_name, service_name == "No Heat Residential", "Misc"),
+         service_name = replace(service_name, service_name == "Sanitation / Dumpster Violation", "Sanitation")
+         )
+
+zip_count <- df311 %>%
+  count(zipcode, sort=TRUE)
+
+zip_count = rename(zip_count, Calls = n)
+
+info_serv <- df311 %>%
+  mutate(service_name = replace(service_name, service_name != "Information Request", "Service Request"))
+```
+
+# Zipcode
+
+
+Column {data-width=750}{.tabset}
+-----------------------------------------------------------------------
+
+### 311 Calls by Service Request
+
+```{r}
+df311_bins1 <- df311_bins %>% group_by(service_name, zipcode) %>% summarise(calls=n())
+
+df311_bins1 <-df311_bins1 %>% filter(service_name != "Information Request")
+
+zipcode_service <- ggplot(df311_bins1, aes(x = service_name, y = calls, fill=service_name)) +
+  geom_bar(stat =  "identity") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  labs(fill="") +
+  xlab("Service Type") +
+  facet_wrap(~zipcode)
+
+ggplotly(zipcode_service)
+```
+
+
+### 311 Calls Service vs Information Requests
+
+```{r}
+info_serve2 <- info_serv %>% group_by(service_name, zipcode) %>% summarise(calls=n())
+
+
+zipcode_service1 <- ggplot(info_serve2, aes(x = service_name, y = calls, fill=service_name)) +
+  geom_bar(stat =  "identity") +
+  theme(axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  labs(fill="") +
+  xlab("Call Type") +
+  facet_wrap(~zipcode)
+
+ggplotly(zipcode_service1)
+```
+
+# Map
+
+Column {data-width=250}
+-----------------------------------------------------------------------
+
+### Total 311 Calls
+
+```{r}
+phl_geo = "Zipcodes_Poly.geojson"
+
+
+
+geojson <- rjson::fromJSON(file=phl_geo)
+df <- zip_count
+g <- list(
+  fitbounds = "locations",
+  visible = FALSE
+)
+fig <- plot_ly() 
+fig <- fig %>% add_trace(
+  type="choropleth",
+  geojson=geojson,
+  locations=df$zipcode,
+  z=df$Calls,
+  colorscale="Viridis",
+  featureidkey="properties.CODE"
+)
+fig <- fig %>% layout(
+  geo = g
+)
+fig <- fig %>% colorbar(title = "311 Calls")
+
+fig
+```
+
+# City
+
+Column {data-width=250}{.tabset}
+-----------------------------------------------------------------------
+### Total 311 Calls by Service 
+
+```{r}
+df311_bins2 <- df311_bins %>% group_by(service_name) %>% summarise(calls=n())
+
+df311_bins2 <-df311_bins2 %>% filter(service_name != "Information Request")
+
+
+service_total <- ggplot(df311_bins2, aes(x = service_name, y = calls, fill=service_name)) +
+  geom_bar(stat =  "identity") +
+  labs(fill="") +
+  xlab("Service Type")
+
+ggplotly(service_total)
+
+```
+
+### Service vs Information Requests (Total)
+
+```{r}
+info_serve1 <- info_serv %>% group_by(service_name) %>% summarise(calls=n())
+
+
+service_total2 <- ggplot(info_serve1, aes(x = service_name, y = calls, fill=service_name)) +
+  geom_bar(stat =  "identity", width = .4) +
+  xlab("Call Type")+ 
+  labs(fill="")
+  
+
+ggplotly(service_total2)
+
+```
